@@ -1,0 +1,12 @@
+/*
+ * App.css
+ * --------
+ * Estilos específicos del componente App.jsx.
+ *
+ * En GoodLuck todo el estilo se maneja con clases de Tailwind
+ * directamente en los componentes, por lo que este archivo
+ * se deja vacío intencionalmente.
+ *
+ * Si en el futuro se necesitan estilos globales extra que no
+ * encajen en Tailwind, se pueden agregar aquí.
+ */

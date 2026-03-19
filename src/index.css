@@ -1,0 +1,52 @@
+/*
+ * index.css
+ * ----------
+ * Hoja de estilos global de GoodLuck.
+ *
+ * Aquí se importa Tailwind v4 y se definen los tokens de diseño
+ * (colores, fuentes) del tema oscuro/urbano de la tienda.
+ *
+ * Tailwind v4 usa @theme para registrar colores personalizados que
+ * luego están disponibles como clases: bg-brand-dark, text-brand-gold, etc.
+ */
+
+/* Importa todas las utilidades de Tailwind v4 */
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────
+   Tokens de diseño del tema GoodLuck
+   ──────────────────────────────────────────── */
+@theme {
+  /* Colores principales */
+  --color-brand-black:  #0a0a0a; /* fondo principal de la app */
+  --color-brand-dark:   #1a1a1a; /* fondo de cards y secciones */
+  --color-brand-gray:   #2a2a2a; /* bordes y separadores */
+  --color-brand-gold:   #f5c518; /* color acento / llamadas a acción */
+  --color-brand-white:  #f0f0f0; /* texto principal */
+  --color-brand-muted:  #888888; /* texto secundario / subtítulos */
+
+  /* Fuente principal */
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+/* ──────────────────────────────────────────────
+   Estilos base del documento
+   ──────────────────────────────────────────── */
+body {
+  margin: 0;
+  background-color: #0a0a0a;
+  color: #f0f0f0;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Elimina el margen por defecto de las imágenes */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Estilos base para botones: sin outline molesto al hacer focus */
+button {
+  cursor: pointer;
+}
