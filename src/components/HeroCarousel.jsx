@@ -36,7 +36,7 @@ const slides = [
     title: "Nueva Colección",
     subtitle: "Estilo urbano para cada momento",
     cta: "Ver colección",
-    to: "/",
+    to: "/tienda",
   },
   {
     id: 2,
@@ -52,7 +52,7 @@ const slides = [
     title: "GoodLuck Style",
     subtitle: "Viste con actitud, vive sin límites",
     cta: "Explorar ahora",
-    to: "/",
+    to: "/tienda",
   },
 ];
 
