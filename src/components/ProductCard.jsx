@@ -34,7 +34,11 @@ export default function ProductCard({ product }) {
 
       {/* ── Contenedor de imagen ── */}
       {/* overflow-hidden para que el zoom no desborde la tarjeta */}
-      <div className="relative overflow-hidden aspect-[3/4]">
+      {/* cursor-pointer indica que la imagen es clickeable */}
+      <div
+        className="relative overflow-hidden aspect-[3/4] cursor-pointer"
+        onClick={() => navigate(`/producto/${product.id}`)}
+      >
         <img
           src={mainImage}
           alt={product.name}
