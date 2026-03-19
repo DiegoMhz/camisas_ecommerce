@@ -18,6 +18,7 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -26,6 +27,9 @@ export default function App() {
   return (
     // Wrapper principal: columna flex para que el Footer siempre quede abajo
     <div className="min-h-screen flex flex-col bg-brand-black">
+
+      {/* Resetea el scroll al tope cada vez que cambia la ruta */}
+      <ScrollToTop />
 
       {/* Barra de navegación fija en la parte superior */}
       <Navbar />
