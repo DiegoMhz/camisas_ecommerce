@@ -22,6 +22,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 
 export default function App() {
   return (
@@ -45,6 +46,9 @@ export default function App() {
 
           {/* Ruta del carrito de compras */}
           <Route path="/carrito" element={<Cart />} />
+
+          {/* Ruta del formulario de pago */}
+          <Route path="/checkout" element={<Checkout />} />
         </Routes>
       </div>
 
