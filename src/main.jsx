@@ -5,24 +5,27 @@
  *
  * Monta el componente raíz <App /> en el elemento #root del HTML.
  *
- * BrowserRouter: habilita el sistema de rutas de React Router,
- * usando la URL del navegador para determinar qué página mostrar.
- *
- * StrictMode: activa advertencias adicionales de React durante el
- * desarrollo (no afecta la versión de producción).
+ * Orden de los proveedores (de afuera hacia adentro):
+ *  1. StrictMode    : advertencias extra en desarrollo
+ *  2. BrowserRouter : habilita las rutas con React Router
+ *  3. CartProvider  : provee el estado global del carrito a toda la app
  */
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { CartProvider } from './context/CartContext.jsx';
 import './index.css';
 import App from './App.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* BrowserRouter envuelve toda la app para que React Router funcione */}
     <BrowserRouter>
-      <App />
+      {/* CartProvider debe estar dentro de BrowserRouter para que
+          los componentes del carrito puedan usar useNavigate */}
+      <CartProvider>
+        <App />
+      </CartProvider>
     </BrowserRouter>
   </StrictMode>,
 );

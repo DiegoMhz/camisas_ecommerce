@@ -10,8 +10,9 @@
  * Rutas disponibles:
  *  - "/"              → Página de inicio (Home)
  *  - "/producto/:id"  → Detalle de un producto específico (ProductDetail)
+ *  - "/carrito"       → Carrito de compras (Cart)
  *
- * Uso: Este componente es montado por main.jsx dentro de <BrowserRouter>.
+ * Uso: Este componente es montado por main.jsx dentro de <BrowserRouter> y <CartProvider>.
  */
 
 import { Routes, Route } from "react-router-dom";
@@ -19,6 +20,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
 
 export default function App() {
   return (
@@ -36,6 +38,9 @@ export default function App() {
 
           {/* Ruta de detalle de producto — :id es el identificador dinámico */}
           <Route path="/producto/:id" element={<ProductDetail />} />
+
+          {/* Ruta del carrito de compras */}
+          <Route path="/carrito" element={<Cart />} />
         </Routes>
       </div>
 

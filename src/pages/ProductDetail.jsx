@@ -12,7 +12,7 @@
  *  - Nombre, precio (con precio tachado si hay descuento)
  *  - Descripción del producto
  *  - Selector de talla (botones toggle)
- *  - Botón "Agregar al carrito" (solo visual en el Paso 1)
+ *  - Botón "Agregar al carrito" — funcional, usa CartContext
  *
  * No recibe props. Lee el ID desde useParams().
  *
@@ -22,6 +22,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../data/products";
+import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
   // useParams extrae el :id de la URL (ej: /producto/3 → id = "3")
@@ -29,6 +30,9 @@ export default function ProductDetail() {
 
   // useNavigate permite navegar hacia atrás o a otras rutas
   const navigate = useNavigate();
+
+  // Accedemos al dispatch del carrito para poder agregar productos
+  const { dispatch } = useCart();
 
   // Buscamos el producto por ID en los datos mock
   const product = getProductById(id);
@@ -38,6 +42,9 @@ export default function ProductDetail() {
 
   // Estado: talla actualmente seleccionada por el usuario
   const [selectedSize, setSelectedSize] = useState(null);
+
+  // Estado: controla si se muestra el mensaje de confirmación "¡Agregado!"
+  const [added, setAdded] = useState(false);
 
   // Si el producto no existe (ID inválido), mostramos un mensaje de error
   if (!product) {
@@ -56,6 +63,28 @@ export default function ProductDetail() {
 
   // Comprobamos si hay descuento para mostrar el precio tachado
   const hasDiscount = product.originalPrice !== null && product.originalPrice > product.price;
+
+  /**
+   * Agrega el producto al carrito.
+   * Valida que el usuario haya seleccionado una talla antes de agregar.
+   * Muestra un mensaje de confirmación durante 2 segundos.
+   */
+  function handleAddToCart() {
+    // Si no se seleccionó talla, no hacemos nada (el UI ya muestra el indicador)
+    if (!selectedSize) return;
+
+    // Despachamos la acción al CartContext
+    dispatch({
+      type: "ADD_ITEM",
+      payload: { product, size: selectedSize },
+    });
+
+    // Mostramos el mensaje de confirmación "¡Agregado!"
+    setAdded(true);
+
+    // Después de 2 segundos, volvemos al estado normal del botón
+    setTimeout(() => setAdded(false), 2000);
+  }
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
@@ -145,6 +174,12 @@ export default function ProductDetail() {
                   — {selectedSize}
                 </span>
               )}
+              {/* Aviso si el usuario intentó agregar sin elegir talla */}
+              {!selectedSize && added === false && (
+                <span className="text-brand-muted ml-2 normal-case tracking-normal font-normal text-xs">
+                  (selecciona una)
+                </span>
+              )}
             </p>
             <div className="flex gap-2 flex-wrap">
               {product.sizes.map((size) => (
@@ -164,12 +199,30 @@ export default function ProductDetail() {
           </div>
 
           {/* ── Botón Agregar al Carrito ── */}
-          {/* En el Paso 1 solo es visual. En el Paso 2 tendrá funcionalidad. */}
           <button
-            className="bg-brand-gold text-black font-bold uppercase tracking-widest py-4 hover:bg-yellow-400 transition-colors text-sm"
+            onClick={handleAddToCart}
+            disabled={!selectedSize}
+            className={`font-bold uppercase tracking-widest py-4 transition-colors text-sm ${
+              added
+                ? "bg-green-500 text-white"           // estado: recién agregado
+                : selectedSize
+                  ? "bg-brand-gold text-black hover:bg-yellow-400"  // estado: listo para agregar
+                  : "bg-brand-gray text-brand-muted cursor-not-allowed"  // estado: sin talla elegida
+            }`}
           >
-            Agregar al carrito
+            {/* El texto del botón cambia según el estado */}
+            {added ? "¡Agregado al carrito!" : "Agregar al carrito"}
           </button>
+
+          {/* Enlace rápido al carrito (aparece solo después de agregar) */}
+          {added && (
+            <button
+              onClick={() => navigate("/carrito")}
+              className="mt-2 text-brand-gold text-sm underline text-center"
+            >
+              Ver carrito →
+            </button>
+          )}
 
           {/* Nota de categoría */}
           <p className="text-brand-muted text-xs mt-4 capitalize">
