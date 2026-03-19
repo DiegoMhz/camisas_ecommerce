@@ -246,8 +246,8 @@ export default function Checkout() {
               Información Personal
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label="Nombre completo" name="nombre" placeholder="Juan García" />
-              <FormField label="Email" name="email" type="email" placeholder="juan@email.com" />
+              <FormField label="Nombre completo" name="nombre" placeholder="Juan Pérez" />
+              <FormField label="Email" name="email" type="email" placeholder="juan@gmail.com" />
               {/* Campo de teléfono con prefijo fijo de Venezuela */}
               <div className="flex flex-col gap-1">
                 <label className="text-brand-white text-xs uppercase tracking-wider font-medium">
@@ -264,7 +264,7 @@ export default function Checkout() {
                     name="telefono"
                     value={form.telefono}
                     onChange={handleChange}
-                    placeholder="412 000 0000"
+                    placeholder="0412 000 0000"
                     maxLength={11}
                     className="flex-1 bg-brand-black px-3 py-2 text-brand-white text-sm placeholder-brand-gray focus:outline-none"
                   />
@@ -285,11 +285,11 @@ export default function Checkout() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* La calle ocupa el ancho completo */}
               <div className="sm:col-span-2">
-                <FormField label="Calle y número" name="calle" placeholder="Av. Reforma 123, Col. Centro" />
+                <FormField label="Calle y número" name="calle" placeholder="Av. Libertador, Edif. Centro, Piso 2, Apto 4" />
               </div>
-              <FormField label="Ciudad" name="ciudad" placeholder="Ciudad de México" />
-              <FormField label="Estado" name="estado" placeholder="CDMX" />
-              <FormField label="Código postal" name="codigoPostal" placeholder="06600" maxLength={5} />
+              <FormField label="Ciudad" name="ciudad" placeholder="Caracas" />
+              <FormField label="Estado" name="estado" placeholder="Distrito Capital" />
+              <FormField label="Código postal" name="codigoPostal" placeholder="1010" maxLength={4} />
             </div>
           </div>
 
@@ -320,7 +320,7 @@ export default function Checkout() {
                   maxLength={19}
                 />
               </div>
-              <FormField label="Titular de la tarjeta" name="titularTarjeta" placeholder="JUAN GARCIA" />
+              <FormField label="Titular de la tarjeta" name="titularTarjeta" placeholder="JUAN PEREZ" />
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Vencimiento" name="vencimiento" placeholder="MM/AA" maxLength={5} />
                 <FormField label="CVV" name="cvv" placeholder="123" maxLength={4} />
