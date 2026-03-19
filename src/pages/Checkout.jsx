@@ -154,7 +154,10 @@ export default function Checkout() {
     if (!form.nombre.trim())   newErrors.nombre   = "El nombre es requerido.";
     if (!form.email.trim())    newErrors.email    = "El email es requerido.";
     else if (!/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Email inválido.";
-    if (!form.telefono.trim()) newErrors.telefono = "El teléfono es requerido.";
+    // Teléfono venezolano: 10 u 11 dígitos (ej: 4121234567 o 04121234567)
+    const telefonoDigits = form.telefono.replace(/\D/g, "");
+    if (!telefonoDigits) newErrors.telefono = "El teléfono es requerido.";
+    else if (telefonoDigits.length < 10) newErrors.telefono = "Ingresa un número venezolano válido (ej: 412 000 0000).";
 
     // Validaciones de dirección
     if (!form.calle.trim())        newErrors.calle        = "La calle es requerida.";
@@ -245,7 +248,31 @@ export default function Checkout() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Nombre completo" name="nombre" placeholder="Juan García" />
               <FormField label="Email" name="email" type="email" placeholder="juan@email.com" />
-              <FormField label="Teléfono" name="telefono" type="tel" placeholder="+52 55 0000 0000" />
+              {/* Campo de teléfono con prefijo fijo de Venezuela */}
+              <div className="flex flex-col gap-1">
+                <label className="text-brand-white text-xs uppercase tracking-wider font-medium">
+                  Teléfono
+                </label>
+                <div className={`flex border transition-colors ${errors.telefono ? "border-red-500" : "border-brand-gray focus-within:border-brand-gold"}`}>
+                  {/* Prefijo fijo: bandera + código de país — no editable */}
+                  <span className="bg-brand-gray/40 px-3 flex items-center gap-2 text-brand-white text-sm border-r border-brand-gray flex-shrink-0 select-none">
+                    🇻🇪 +58
+                  </span>
+                  {/* Input solo para el número local (sin el +58) */}
+                  <input
+                    type="tel"
+                    name="telefono"
+                    value={form.telefono}
+                    onChange={handleChange}
+                    placeholder="412 000 0000"
+                    maxLength={11}
+                    className="flex-1 bg-brand-black px-3 py-2 text-brand-white text-sm placeholder-brand-gray focus:outline-none"
+                  />
+                </div>
+                {errors.telefono && (
+                  <p className="text-red-400 text-xs">{errors.telefono}</p>
+                )}
+              </div>
             </div>
           </div>
 
