@@ -5,7 +5,7 @@
  *
  * Permite al usuario explorar todos los productos con:
  *  - Buscador por nombre de producto
- *  - Filtros por categoría: Todos, Casual, Formal, Sport
+ *  - Filtros por categoría: Todos, Oversize, MLB / NBA, Multimarcas
  *  - Ordenamiento: Relevancia, Menor precio, Mayor precio
  *
  * El filtrado y ordenamiento ocurren en el cliente (sin llamadas al servidor)
@@ -23,10 +23,10 @@ import ProductCard from "../components/ProductCard";
 // Categorías disponibles para filtrar.
 // "todos" es la opción por defecto que no filtra nada.
 const CATEGORIES = [
-  { value: "todos",  label: "Todos" },
-  { value: "casual", label: "Casual" },
-  { value: "formal", label: "Formal" },
-  { value: "sport",  label: "Sport" },
+  { value: "todos",        label: "Todos" },
+  { value: "oversize",     label: "Oversize" },
+  { value: "mlb-nba",      label: "MLB / NBA" },
+  { value: "multimarcas",  label: "Multimarcas" },
 ];
 
 // Opciones de ordenamiento
