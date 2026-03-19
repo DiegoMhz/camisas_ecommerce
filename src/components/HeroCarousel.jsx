@@ -12,23 +12,23 @@
  *  - Imagen de fondo a pantalla completa
  *  - Capa oscura encima para mejor legibilidad del texto
  *  - Título, subtítulo y botón CTA
+ *  - Campo `to`: ruta a la que navega el botón CTA al hacer clic
  *
  * No recibe props. Los slides están definidos dentro del componente.
  *
  * Uso: <HeroCarousel />
  */
 
-// Importamos los módulos de Swiper que vamos a usar
+import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 
-// Estilos base de Swiper (obligatorios)
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-// Datos de los slides del hero
-// Cada slide tiene: imagen de fondo, título, subtítulo y texto del botón CTA
+// Datos de los slides del hero.
+// El campo `to` indica a qué ruta navega el botón CTA de cada slide.
 const slides = [
   {
     id: 1,
@@ -36,6 +36,7 @@ const slides = [
     title: "Nueva Colección",
     subtitle: "Estilo urbano para cada momento",
     cta: "Ver colección",
+    to: "/",
   },
   {
     id: 2,
@@ -43,6 +44,7 @@ const slides = [
     title: "Ofertas Especiales",
     subtitle: "Descuentos exclusivos esta semana",
     cta: "Ver ofertas",
+    to: "/ofertas",   // navega a la página de ofertas
   },
   {
     id: 3,
@@ -50,23 +52,21 @@ const slides = [
     title: "GoodLuck Style",
     subtitle: "Viste con actitud, vive sin límites",
     cta: "Explorar ahora",
+    to: "/",
   },
 ];
 
 export default function HeroCarousel() {
+  // useNavigate para que los botones CTA puedan cambiar de página
+  const navigate = useNavigate();
+
   return (
-    // El wrapper define la altura del carrusel
     <div className="w-full h-[480px] sm:h-[560px] overflow-hidden">
       <Swiper
-        // Módulos que activa Swiper
         modules={[Autoplay, Navigation, Pagination]}
-        // Configuración del autoplay: avanza cada 4 segundos
         autoplay={{ delay: 4000, disableOnInteraction: false }}
-        // Muestra las flechas de navegación
         navigation
-        // Muestra los dots de paginación en la parte inferior
         pagination={{ clickable: true }}
-        // El carrusel es infinito (vuelve al inicio al llegar al final)
         loop
         className="h-full"
       >
@@ -91,7 +91,11 @@ export default function HeroCarousel() {
                 <p className="text-brand-muted text-lg mb-8 max-w-md">
                   {slide.subtitle}
                 </p>
-                <button className="bg-brand-gold text-black font-bold uppercase tracking-wider px-8 py-3 hover:bg-yellow-400 transition-colors">
+                {/* El botón navega a la ruta definida en slide.to */}
+                <button
+                  onClick={() => navigate(slide.to)}
+                  className="bg-brand-gold text-black font-bold uppercase tracking-wider px-8 py-3 hover:bg-yellow-400 transition-colors"
+                >
                   {slide.cta}
                 </button>
               </div>

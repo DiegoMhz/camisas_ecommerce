@@ -61,6 +61,18 @@ export default function Navbar() {
               Tienda
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/ofertas"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-brand-gold font-semibold text-sm uppercase tracking-wider"
+                  : "text-brand-muted hover:text-brand-gold text-sm uppercase tracking-wider transition-colors"
+              }
+            >
+              Ofertas
+            </NavLink>
+          </li>
         </ul>
 
         {/* ── Icono carrito con badge de cantidad ── */}

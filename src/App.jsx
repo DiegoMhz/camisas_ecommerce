@@ -23,6 +23,7 @@ import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Offers from "./pages/Offers";
 
 export default function App() {
   return (
@@ -49,6 +50,9 @@ export default function App() {
 
           {/* Ruta del formulario de pago */}
           <Route path="/checkout" element={<Checkout />} />
+
+          {/* Ruta de ofertas y promociones */}
+          <Route path="/ofertas" element={<Offers />} />
         </Routes>
       </div>
 
