@@ -365,6 +365,7 @@ export default function Checkout() {
                   <img
                     src={item.image}
                     alt={item.name}
+                    loading="lazy"
                     className="w-12 h-14 object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">

@@ -8,58 +8,68 @@
 - **React Router v6** con `BrowserRouter`, `Routes`, `Route`, `Link`, `NavLink`
 - **Swiper** para el carrusel hero
 - **React Context + useReducer** para el carrito global
+- **Supabase** como base de datos (tabla `products`)
 
 ### Rutas disponibles
 | Ruta | Página |
 |---|---|
 | `/` | Home — hero carrusel, destacados, grid completo |
-| `/tienda` | Tienda — buscador, filtros por categoría, ordenamiento |
+| `/tienda` | Tienda — buscador con debounce, filtros, orden, scroll infinito |
 | `/ofertas` | Ofertas — productos con descuento activo |
 | `/producto/:id` | Detalle de producto — galería, tallas, agregar al carrito |
 | `/carrito` | Carrito — lista de items, cantidades, total |
 | `/checkout` | Checkout — formulario de pago (datos personales, dirección, tarjeta) |
+| `/admin` | Panel admin — listar, buscar, agregar, editar y eliminar productos |
 
 ### Componentes
 - `Navbar` — logo, navegación activa, badge del carrito
 - `HeroCarousel` — 3 slides con Swiper, autoplay, navegación a rutas
-- `ProductCard` — imagen clickeable con `<Link>`, badge oferta, botón "Ver más"
+- `ProductCard` — imagen clickeable con `<Link>`, badge oferta, botón "Ver más", lazy loading
 - `Footer` — links de navegación, copyright
 - `ScrollToTop` — resetea scroll al navegar entre rutas
 - `PageLoader` — spinner mostrado por `React.lazy` + `Suspense` durante carga de chunks
 
 ### Funcionalidades
 - **Carrito global** con `CartContext`: agregar, quitar, cambiar cantidad, limpiar
-- **Checkout** con validación de campos, formato automático de tarjeta (XXXX XXXX...) y vencimiento (MM/AA), prefijo fijo 🇻🇪 +58 para teléfono
+- **Checkout** con validación de campos, formato automático de tarjeta y vencimiento, prefijo +58
 - **Confirmación de pedido** con pantalla de éxito y limpieza del carrito
-- **Filtros en /tienda**: búsqueda por nombre, categorías (Oversize / MLB·NBA / Multimarcas), orden por precio
+- **Tienda `/tienda`**: buscador con debounce 400ms, filtros por categoría, orden por precio, scroll infinito (12 productos por lote, server-side con Supabase `.range()`)
+- **Panel Admin `/admin`**: buscador, listado con editar/eliminar, formulario dual agregar/editar
 - **Code splitting**: cada página es un chunk JS independiente cargado bajo demanda
-
-### Categorías de productos
-- `oversize` — camisas oversized
-- `mlb-nba` — camisetas de equipos MLB y NBA
-- `multimarcas` — Nike, Adidas, Supreme, Jordan
+- **Lazy loading** en imágenes de: ProductCard, Admin, ProductDetail (miniaturas), Cart, Checkout
 
 ### Datos
-- Actualmente mock en `src/data/products.js` (12 productos)
-- Supabase aún **no conectado**
+- Supabase conectado — tabla `products` con 12 productos reales
+- `src/services/productService.js` — getProducts, getProductsPage, getProductById, getOfferProducts, createProduct, updateProduct, deleteProduct
+- `src/data/products.js` conservado como referencia pero ya no se usa
 
 ---
 
-## Próximos 3 pasos
+## Pendiente antes de seguir
 
-### Paso 4 — Integración con Supabase
-- Crear proyecto en Supabase y tabla `products` con los mismos campos del mock
-- Instalar `@supabase/supabase-js` y configurar el cliente en `src/lib/supabase.js`
-- Reemplazar `src/data/products.js` por llamadas reales a Supabase en cada página
-- Usar variables de entorno (`.env`) para las keys de Supabase
+### Verificar en produccion
+- [ ] Confirmar que los filtros (categoria, orden, busqueda) funcionan correctamente con Supabase
+- [ ] Confirmar que el lazy loading de imagenes se aplica correctamente en todos los componentes
 
-### Paso 5 — Panel de Administrador
-- Ruta `/admin` protegida con contraseña simple (sin login complejo)
-- Listar todos los productos con opción de eliminar
-- Formulario para agregar nuevos productos (nombre, precio, categoría, tallas, imágenes, descripción)
-- Las operaciones de escritura/borrado se harán directamente sobre Supabase
+---
 
-### Paso 6 — Deploy
+## Proximos pasos
+
+### Paso 6 — Subida de imagenes a Supabase Storage
+- Reemplazar URLs externas (Unsplash) por imagenes propias almacenadas en Supabase Storage
+- En el formulario del admin, agregar un input de tipo `file` para subir imagenes directamente
+- Al guardar el producto, subir la imagen a un bucket de Supabase y guardar la URL publica generada
+- Eliminar la imagen del bucket cuando se elimina el producto
+
+### Paso 7 — Login y autenticacion
+- Usar Supabase Auth (email + password) para el sistema de login
+- Crear tabla `profiles` vinculada a `auth.users` con campo `role` ('customer' / 'admin')
+- Proteger la ruta `/admin` para que solo usuarios con rol 'admin' puedan acceder
+- Ruta `/login` con formulario de inicio de sesion
+- Ruta `/registro` para nuevos clientes
+- Historial de pedidos vinculado al usuario autenticado (tabla `orders`)
+
+### Paso 8 — Deploy
 - Subir la app a **Vercel** o **Netlify** (compatible con Vite)
 - Configurar las variables de entorno de Supabase en la plataforma de deploy
-- Verificar que todas las rutas funcionen en producción (configurar redirects para SPA)
+- Verificar que todas las rutas funcionen en produccion (configurar redirects para SPA)

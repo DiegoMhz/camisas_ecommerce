@@ -127,6 +127,7 @@ export default function Cart() {
               <img
                 src={item.image}
                 alt={item.name}
+                loading="lazy"
                 className="w-24 h-28 object-cover flex-shrink-0 cursor-pointer"
                 onClick={() => navigate(`/producto/${item.id}`)}
               />

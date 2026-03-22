@@ -154,7 +154,7 @@ export default function ProductDetail() {
                       : "border-brand-gray hover:border-brand-muted"
                   }`}
                 >
-                  <img src={img} alt={`Vista ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`Vista ${index + 1}`} loading="lazy" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
