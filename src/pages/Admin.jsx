@@ -13,8 +13,8 @@
  * Uso: Renderizado en la ruta "/admin" del router.
  */
 
-import { useState, useEffect } from "react";
-import { getProducts, createProduct, deleteProduct } from "../services/productService";
+import { useState, useEffect, useMemo } from "react";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../services/productService";
 
 // Tallas disponibles para seleccionar al crear un producto
 const ALL_SIZES = ["S", "M", "L", "XL", "XXL"];
@@ -54,8 +54,15 @@ export default function Admin() {
   // ── Estado de eliminación (guarda el ID que se está eliminando) ──
   const [deletingId, setDeletingId] = useState(null);
 
+  // ── Producto que se está editando (null = modo agregar) ──
+  // Cuando tiene valor, el formulario actúa como editor en vez de creador.
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // ── Buscador de la lista ──
+  const [search, setSearch] = useState("");
+
   // ── Vista activa del panel (tabs) ──
-  const [activeTab, setActiveTab] = useState("lista"); // "lista" | "agregar"
+  const [activeTab, setActiveTab] = useState("lista"); // "lista" | "form"
 
   // Cargamos los productos al montar el componente
   useEffect(() => {
@@ -74,6 +81,20 @@ export default function Admin() {
       .catch((err) => setListError(err.message))
       .finally(() => setLoadingList(false));
   }
+
+  /**
+   * Lista de productos filtrada según el texto del buscador.
+   * Busca en nombre y categoría, sin importar mayúsculas.
+   */
+  const filteredProducts = useMemo(() => {
+    if (!search.trim()) return products;
+    const query = search.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query)
+    );
+  }, [products, search]);
 
   // ─────────────────────────────────────────────────────────
   // Handlers del formulario
@@ -106,8 +127,41 @@ export default function Admin() {
   }
 
   /**
-   * Envía el formulario para crear un nuevo producto en Supabase.
-   * Valida que los campos obligatorios estén completos antes de guardar.
+   * Activa el modo edición: precarga el formulario con los datos del producto
+   * y cambia al tab del formulario.
+   * @param {object} product - Producto a editar
+   */
+  function handleEdit(product) {
+    setEditingProduct(product);
+    setForm({
+      name:           product.name,
+      price:          String(product.price),
+      original_price: product.originalPrice ? String(product.originalPrice) : "",
+      category:       product.category,
+      sizes:          [...product.sizes],
+      image1:         product.images[0] || "",
+      image2:         product.images[1] || "",
+      description:    product.description,
+      featured:       product.featured,
+    });
+    setSaveError(null);
+    setSaveSuccess(false);
+    setActiveTab("form");
+  }
+
+  /**
+   * Cancela la edición y vuelve al formulario limpio en modo agregar.
+   */
+  function handleCancelEdit() {
+    setEditingProduct(null);
+    setForm(EMPTY_FORM);
+    setSaveError(null);
+    setSaveSuccess(false);
+  }
+
+  /**
+   * Envía el formulario: crea un nuevo producto o actualiza el existente
+   * dependiendo de si hay un `editingProduct` activo.
    * @param {React.FormEvent} e
    */
   async function handleSubmit(e) {
@@ -127,7 +181,7 @@ export default function Admin() {
     if (form.image2.trim()) images.push(form.image2.trim());
 
     // Armamos el objeto en formato snake_case que espera Supabase
-    const newProduct = {
+    const productData = {
       name:           form.name.trim(),
       price:          Number(form.price),
       original_price: form.original_price ? Number(form.original_price) : null,
@@ -140,11 +194,20 @@ export default function Admin() {
 
     setSaving(true);
     try {
-      await createProduct(newProduct);
+      if (editingProduct) {
+        // ── Modo edición: actualizamos el producto existente ──
+        const updated = await updateProduct(editingProduct.id, productData);
+        // Actualizamos el producto en la lista local sin recargar todo
+        setProducts((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+        setEditingProduct(null);
+      } else {
+        // ── Modo agregar: creamos un producto nuevo ──
+        await createProduct(productData);
+        fetchProducts();
+      }
       setSaveSuccess(true);
-      setForm(EMPTY_FORM);     // limpiamos el formulario
-      fetchProducts();          // refrescamos la lista
-      setActiveTab("lista");    // volvemos a la lista para ver el nuevo producto
+      setForm(EMPTY_FORM);
+      setActiveTab("lista");
     } catch (err) {
       setSaveError(err.message);
     } finally {
@@ -193,10 +256,10 @@ export default function Admin() {
         </h1>
       </div>
 
-      {/* ── Tabs: Lista / Agregar ── */}
+      {/* ── Tabs: Lista / Formulario ── */}
       <div className="flex gap-1 mb-8 border-b border-brand-gray">
         <button
-          onClick={() => setActiveTab("lista")}
+          onClick={() => { setActiveTab("lista"); handleCancelEdit(); }}
           className={`px-6 py-2.5 text-sm uppercase tracking-wider font-medium transition-colors border-b-2 -mb-px ${
             activeTab === "lista"
               ? "border-brand-gold text-brand-gold"
@@ -206,14 +269,17 @@ export default function Admin() {
           Productos ({products.length})
         </button>
         <button
-          onClick={() => { setActiveTab("agregar"); setSaveSuccess(false); setSaveError(null); }}
+          onClick={() => { setActiveTab("form"); handleCancelEdit(); setSaveSuccess(false); }}
           className={`px-6 py-2.5 text-sm uppercase tracking-wider font-medium transition-colors border-b-2 -mb-px ${
-            activeTab === "agregar"
+            activeTab === "form"
               ? "border-brand-gold text-brand-gold"
               : "border-transparent text-brand-muted hover:text-brand-white"
           }`}
         >
-          + Agregar producto
+          {/* El label cambia según el modo */}
+          {activeTab === "form" && editingProduct
+            ? `Editando: ${editingProduct.name}`
+            : "+ Agregar producto"}
         </button>
       </div>
 
@@ -235,67 +301,122 @@ export default function Admin() {
           )}
 
           {!loadingList && products.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center gap-4 bg-brand-dark border border-brand-gray p-4"
+            <>
+              {/* ── Buscador ── */}
+              <div className="relative mb-5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted pointer-events-none"
                 >
-                  {/* Miniatura de imagen */}
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-14 h-14 object-cover flex-shrink-0"
-                  />
-
-                  {/* Info principal */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-brand-white text-sm font-medium truncate">
-                      {product.name}
-                    </p>
-                    <p className="text-brand-muted text-xs mt-0.5">
-                      {product.category} · ${product.price}
-                      {product.originalPrice && (
-                        <span className="line-through ml-1">${product.originalPrice}</span>
-                      )}
-                    </p>
-                    <p className="text-brand-muted text-xs mt-0.5">
-                      Tallas: {product.sizes.join(", ")}
-                    </p>
-                  </div>
-
-                  {/* Badge destacado */}
-                  {product.featured && (
-                    <span className="text-brand-gold text-xs uppercase tracking-wider border border-brand-gold/30 px-2 py-0.5 flex-shrink-0">
-                      Destacado
-                    </span>
-                  )}
-
-                  {/* Botón eliminar */}
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre o categoría..."
+                  className="w-full bg-brand-dark border border-brand-gray pl-10 pr-10 py-2.5 text-brand-white text-sm placeholder-brand-muted focus:outline-none focus:border-brand-gold transition-colors"
+                />
+                {search && (
                   <button
-                    onClick={() => handleDelete(product.id, product.name)}
-                    disabled={deletingId === product.id}
-                    className="flex-shrink-0 border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors px-3 py-1.5 text-xs uppercase tracking-wider disabled:opacity-40"
+                    onClick={() => setSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-white transition-colors"
                   >
-                    {deletingId === product.id ? "Eliminando..." : "Eliminar"}
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
                   </button>
+                )}
+              </div>
+
+              {/* Contador */}
+              <p className="text-brand-muted text-xs mb-4">
+                {filteredProducts.length} de {products.length} productos
+                {search.trim() && <span className="text-brand-white"> para "{search}"</span>}
+              </p>
+
+              {/* Sin resultados */}
+              {filteredProducts.length === 0 ? (
+                <p className="text-brand-muted text-sm py-6 text-center">
+                  Sin resultados.{" "}
+                  <button onClick={() => setSearch("")} className="text-brand-gold underline">
+                    Limpiar búsqueda
+                  </button>
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {filteredProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center gap-4 bg-brand-dark border border-brand-gray p-4"
+                    >
+                      {/* Miniatura de imagen */}
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        loading="lazy"
+                        className="w-14 h-14 object-cover flex-shrink-0"
+                      />
+
+                      {/* Info principal */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-brand-white text-sm font-medium truncate">
+                          {product.name}
+                        </p>
+                        <p className="text-brand-muted text-xs mt-0.5">
+                          {product.category} · ${product.price}
+                          {product.originalPrice && (
+                            <span className="line-through ml-1">${product.originalPrice}</span>
+                          )}
+                        </p>
+                        <p className="text-brand-muted text-xs mt-0.5">
+                          Tallas: {product.sizes.join(", ")}
+                        </p>
+                      </div>
+
+                      {/* Badge destacado */}
+                      {product.featured && (
+                        <span className="text-brand-gold text-xs uppercase tracking-wider border border-brand-gold/30 px-2 py-0.5 flex-shrink-0">
+                          Destacado
+                        </span>
+                      )}
+
+                      {/* Botón editar */}
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="flex-shrink-0 border border-brand-gray text-brand-muted hover:border-brand-gold hover:text-brand-gold transition-colors px-3 py-1.5 text-xs uppercase tracking-wider"
+                      >
+                        Editar
+                      </button>
+
+                      {/* Botón eliminar */}
+                      <button
+                        onClick={() => handleDelete(product.id, product.name)}
+                        disabled={deletingId === product.id}
+                        className="flex-shrink-0 border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors px-3 py-1.5 text-xs uppercase tracking-wider disabled:opacity-40"
+                      >
+                        {deletingId === product.id ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </section>
       )}
 
       {/* ══════════════════════════════════════════
-          TAB 2 — Formulario para agregar producto
+          TAB 2 — Formulario (agregar o editar)
       ══════════════════════════════════════════ */}
-      {activeTab === "agregar" && (
+      {activeTab === "form" && (
         <section>
 
           {/* Mensaje de éxito al guardar */}
           {saveSuccess && (
             <div className="mb-6 border border-green-500/30 bg-green-500/10 px-4 py-3 text-green-400 text-sm">
-              Producto agregado correctamente.
+              {editingProduct ? "Producto actualizado correctamente." : "Producto agregado correctamente."}
             </div>
           )}
 
@@ -451,14 +572,29 @@ export default function Admin() {
               </p>
             )}
 
-            {/* ── Botón submit ── */}
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-brand-gold text-black font-bold uppercase tracking-widest py-4 text-sm hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? "Guardando..." : "Agregar producto"}
-            </button>
+            {/* ── Botones de acción ── */}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 bg-brand-gold text-black font-bold uppercase tracking-widest py-4 text-sm hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving
+                  ? "Guardando..."
+                  : editingProduct ? "Guardar cambios" : "Agregar producto"}
+              </button>
+
+              {/* Botón cancelar — solo visible en modo edición */}
+              {editingProduct && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="border border-brand-gray text-brand-muted hover:border-brand-muted hover:text-brand-white transition-colors px-6 text-sm uppercase tracking-wider"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
 
           </form>
         </section>

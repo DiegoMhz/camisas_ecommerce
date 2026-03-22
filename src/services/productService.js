@@ -74,6 +74,74 @@ export async function getProductById(id) {
 }
 
 /**
+ * Obtiene una página de productos con filtros opcionales.
+ * Usa `.range()` de Supabase para traer solo los productos de la página
+ * solicitada, evitando cargar todo el catálogo de una vez.
+ *
+ * @param {number} page     - Número de página (base 0)
+ * @param {number} pageSize - Cantidad de productos por página
+ * @param {object} filters
+ * @param {string} filters.search   - Texto a buscar en el nombre (opcional)
+ * @param {string} filters.category - Categoría a filtrar, 'todos' = sin filtro
+ * @param {string} filters.sortBy   - 'relevancia' | 'precio-asc' | 'precio-desc'
+ * @returns {Promise<{ products: object[], total: number }>}
+ * @throws {Error} Si la consulta falla
+ */
+export async function getProductsPage(page, pageSize, { search = '', category = 'todos', sortBy = 'relevancia' } = {}) {
+  const from = page * pageSize;
+  const to   = from + pageSize - 1;
+
+  // `count: 'exact'` le pide a Supabase que devuelva el total de filas
+  // que coinciden con los filtros (sin el límite del range), necesario para
+  // calcular cuántas páginas hay en total.
+  let query = supabase.from('products').select('*', { count: 'exact' });
+
+  // Filtro por nombre (ilike = case-insensitive)
+  if (search.trim()) {
+    query = query.ilike('name', `%${search.trim()}%`);
+  }
+
+  // Filtro por categoría
+  if (category !== 'todos') {
+    query = query.eq('category', category);
+  }
+
+  // Ordenamiento
+  if (sortBy === 'precio-asc') {
+    query = query.order('price', { ascending: true });
+  } else if (sortBy === 'precio-desc') {
+    query = query.order('price', { ascending: false });
+  } else {
+    query = query.order('created_at');
+  }
+
+  const { data, error, count } = await query.range(from, to);
+
+  if (error) throw new Error(error.message);
+  return { products: data.map(mapProduct), total: count };
+}
+
+/**
+ * Actualiza los campos de un producto existente en Supabase.
+ *
+ * @param {string} id          - UUID del producto a actualizar
+ * @param {object} productData - Campos a actualizar (snake_case)
+ * @returns {Promise<object>}  El producto actualizado
+ * @throws {Error} Si la actualización falla
+ */
+export async function updateProduct(id, productData) {
+  const { data, error } = await supabase
+    .from('products')
+    .update(productData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapProduct(data);
+}
+
+/**
  * Agrega un nuevo producto a la tabla `products` de Supabase.
  *
  * @param {object} productData - Datos del nuevo producto (sin id ni created_at)
