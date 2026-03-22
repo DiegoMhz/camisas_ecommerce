@@ -38,6 +38,7 @@ const Cart          = lazy(() => import("./pages/Cart"));
 const Checkout      = lazy(() => import("./pages/Checkout"));
 const Offers        = lazy(() => import("./pages/Offers"));
 const Store         = lazy(() => import("./pages/Store"));
+const Admin         = lazy(() => import("./pages/Admin"));
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/checkout"     element={<Checkout />} />
             <Route path="/ofertas"      element={<Offers />} />
             <Route path="/tienda"       element={<Store />} />
+            <Route path="/admin"        element={<Admin />} />
           </Routes>
         </Suspense>
       </div>

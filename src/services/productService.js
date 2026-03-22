@@ -74,6 +74,40 @@ export async function getProductById(id) {
 }
 
 /**
+ * Agrega un nuevo producto a la tabla `products` de Supabase.
+ *
+ * @param {object} productData - Datos del nuevo producto (sin id ni created_at)
+ * @returns {Promise<object>} El producto creado con su ID asignado por Supabase
+ * @throws {Error} Si la inserción falla
+ */
+export async function createProduct(productData) {
+  const { data, error } = await supabase
+    .from('products')
+    .insert([productData])
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapProduct(data);
+}
+
+/**
+ * Elimina un producto de la tabla `products` por su ID.
+ *
+ * @param {string} id - UUID del producto a eliminar
+ * @returns {Promise<void>}
+ * @throws {Error} Si la eliminación falla
+ */
+export async function deleteProduct(id) {
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+/**
  * Obtiene los productos que tienen un precio rebajado
  * (original_price no es null y es mayor al precio actual).
  *
