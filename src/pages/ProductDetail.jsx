@@ -14,18 +14,18 @@
  *  - Selector de talla (botones toggle)
  *  - Botón "Agregar al carrito" — funcional, usa CartContext
  *
- * No recibe props. Lee el ID desde useParams().
+ * No recibe props. Lee el ID desde useParams() y consulta Supabase.
  *
  * Uso: Renderizado en la ruta "/producto/:id" del router.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getProductById } from "../data/products";
+import { getProductById } from "../services/productService";
 import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
-  // useParams extrae el :id de la URL (ej: /producto/3 → id = "3")
+  // useParams extrae el :id de la URL (UUID del producto)
   const { id } = useParams();
 
   // useNavigate permite navegar hacia atrás o a otras rutas
@@ -34,8 +34,11 @@ export default function ProductDetail() {
   // Accedemos al dispatch del carrito para poder agregar productos
   const { dispatch } = useCart();
 
-  // Buscamos el producto por ID en los datos mock
-  const product = getProductById(id);
+  // Producto cargado desde Supabase (null mientras carga o si no existe)
+  const [product, setProduct] = useState(null);
+
+  // true mientras se espera la respuesta de Supabase
+  const [loading, setLoading] = useState(true);
 
   // Estado: índice de la imagen actualmente seleccionada en la galería
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -45,6 +48,28 @@ export default function ProductDetail() {
 
   // Estado: controla si se muestra el mensaje de confirmación "¡Agregado!"
   const [added, setAdded] = useState(false);
+
+  // Cargamos el producto cuando cambia el ID de la URL
+  useEffect(() => {
+    setLoading(true);
+    setProduct(null);
+    setSelectedImageIndex(0);
+    setSelectedSize(null);
+    getProductById(id)
+      .then((data) => setProduct(data))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // ── Estado de carga ──
+  if (loading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-brand-muted text-sm uppercase tracking-widest animate-pulse">
+          Cargando producto...
+        </p>
+      </main>
+    );
+  }
 
   // Si el producto no existe (ID inválido), mostramos un mensaje de error
   if (!product) {

@@ -11,23 +11,55 @@
  *  - Contador de cuántas ofertas hay disponibles
  *  - Grid de productos en oferta usando ProductCard
  *
- * No recibe props. Filtra los datos desde products.js.
+ * No recibe props. Obtiene los datos desde Supabase vía productService.
  *
  * Uso: Renderizado en la ruta "/ofertas" del router.
  */
 
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { products } from "../data/products";
+import { getOfferProducts } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 
 export default function Offers() {
   const navigate = useNavigate();
 
-  // Filtramos solo los productos que tienen descuento activo
-  // Un producto tiene descuento cuando originalPrice existe y es mayor al precio actual
-  const offerProducts = products.filter(
-    (p) => p.originalPrice !== null && p.originalPrice > p.price
-  );
+  // Lista de productos en oferta cargados desde Supabase
+  const [offerProducts, setOfferProducts] = useState([]);
+
+  // true mientras se espera la respuesta de Supabase
+  const [loading, setLoading] = useState(true);
+
+  // Mensaje de error si la consulta falla
+  const [error, setError] = useState(null);
+
+  // Cargamos los productos en oferta al montar el componente
+  useEffect(() => {
+    getOfferProducts()
+      .then((data) => setOfferProducts(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // ── Estado de carga ──
+  if (loading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-brand-muted text-sm uppercase tracking-widest animate-pulse">
+          Cargando ofertas...
+        </p>
+      </main>
+    );
+  }
+
+  // ── Estado de error ──
+  if (error) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-red-400 text-sm">Error al cargar ofertas: {error}</p>
+      </main>
+    );
+  }
 
   return (
     <main>

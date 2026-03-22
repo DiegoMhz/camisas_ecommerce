@@ -11,13 +11,13 @@
  * El filtrado y ordenamiento ocurren en el cliente (sin llamadas al servidor)
  * usando useMemo para no recalcular en cada render innecesariamente.
  *
- * No recibe props. Lee los datos desde products.js.
+ * No recibe props. Obtiene los datos desde Supabase vía productService.
  *
  * Uso: Renderizado en la ruta "/tienda" del router.
  */
 
-import { useState, useMemo } from "react";
-import { products } from "../data/products";
+import { useState, useEffect, useMemo } from "react";
+import { getProducts } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 
 // Categorías disponibles para filtrar.
@@ -37,6 +37,15 @@ const SORT_OPTIONS = [
 ];
 
 export default function Store() {
+  // Lista de productos cargados desde Supabase
+  const [products, setProducts] = useState([]);
+
+  // true mientras se espera la respuesta de Supabase
+  const [loading, setLoading] = useState(true);
+
+  // Mensaje de error si la consulta falla
+  const [error, setError] = useState(null);
+
   // Estado del buscador (texto que escribe el usuario)
   const [search, setSearch] = useState("");
 
@@ -46,9 +55,17 @@ export default function Store() {
   // Estado del criterio de ordenamiento
   const [sortBy, setSortBy] = useState("relevancia");
 
+  // Cargamos todos los productos al montar el componente
+  useEffect(() => {
+    getProducts()
+      .then((data) => setProducts(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
   /**
    * useMemo: calcula la lista filtrada y ordenada solo cuando cambia
-   * search, activeCategory o sortBy. Evita recalcular en cada render.
+   * products, search, activeCategory o sortBy. Evita recalcular en cada render.
    */
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -75,7 +92,7 @@ export default function Store() {
     // "relevancia" no modifica el orden original del array
 
     return result;
-  }, [search, activeCategory, sortBy]);
+  }, [products, search, activeCategory, sortBy]);
 
   /**
    * Limpia todos los filtros y vuelve al estado inicial.
@@ -88,6 +105,26 @@ export default function Store() {
 
   // Comprueba si hay algún filtro activo para mostrar el botón "Limpiar"
   const hasActiveFilters = search.trim() || activeCategory !== "todos" || sortBy !== "relevancia";
+
+  // ── Estado de carga ──
+  if (loading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-brand-muted text-sm uppercase tracking-widest animate-pulse">
+          Cargando productos...
+        </p>
+      </main>
+    );
+  }
+
+  // ── Estado de error ──
+  if (error) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-red-400 text-sm">Error al cargar productos: {error}</p>
+      </main>
+    );
+  }
 
   return (
     <main>

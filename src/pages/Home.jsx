@@ -5,21 +5,59 @@
  *
  * Secciones:
  *  1. HeroCarousel  — carrusel banner en la parte superior
- *  2. Destacados    — grid con los 4 productos marcados como featured
+ *  2. Destacados    — grid con los productos marcados como featured
  *  3. Todos los Productos — grid completo con todos los productos
  *
- * No recibe props. Obtiene los datos desde src/data/products.js.
+ * No recibe props. Obtiene los datos desde Supabase vía productService.
  *
  * Uso: Renderizado en la ruta "/" del router.
  */
 
+import { useState, useEffect } from "react";
 import HeroCarousel from "../components/HeroCarousel";
 import ProductCard from "../components/ProductCard";
-import { products, getFeaturedProducts } from "../data/products";
+import { getProducts } from "../services/productService";
 
 export default function Home() {
-  // Obtenemos solo los productos destacados para la primera sección
-  const featuredProducts = getFeaturedProducts();
+  // Lista completa de productos cargados desde Supabase
+  const [products, setProducts] = useState([]);
+
+  // true mientras se espera la respuesta de Supabase
+  const [loading, setLoading] = useState(true);
+
+  // Mensaje de error si la consulta falla
+  const [error, setError] = useState(null);
+
+  // Al montar el componente, cargamos todos los productos una sola vez
+  useEffect(() => {
+    getProducts()
+      .then((data) => setProducts(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Derivamos los destacados filtrando el array ya cargado (sin llamada extra)
+  const featuredProducts = products.filter((p) => p.featured);
+
+  // ── Estado de carga ──
+  if (loading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-brand-muted text-sm uppercase tracking-widest animate-pulse">
+          Cargando productos...
+        </p>
+      </main>
+    );
+  }
+
+  // ── Estado de error ──
+  if (error) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <p className="text-red-400 text-sm">Error al cargar productos: {error}</p>
+      </main>
+    );
+  }
 
   return (
     <main>
